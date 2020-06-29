@@ -1,5 +1,9 @@
 # Spanish Fortnite Shop
 
+## Creador Original
+
+Todo el mérito del bot al creador original: [EthanC](https://github.com/EthanC/Athena). Yo solo lo he querido traducir y modificar algunas cosas que no estaban hechas para que más gente pueda usarla ^^
+
 Este bot tiene la función de usar la API de Fortnite-API y crear una imagen de la Tienda de Objetos actual para así, publicarla en Twitter
 
 Un ejemplo sería el siguiente:
