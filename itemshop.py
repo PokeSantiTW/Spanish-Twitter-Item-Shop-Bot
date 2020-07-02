@@ -26,12 +26,13 @@ class Athena:
 
         if initialized is True:
             if self.delay > 0:
-                log.info(f"Retraso de {self.delay}s...")
+                log.info(f"Delaying process start for {self.delay}s...")
                 sleep(self.delay)
 
             itemShop = Utility.GET(
                 self,
-                "https://fortnite-api.com/v2/shop/br?language=es",
+                "https://fortnite-api.com/shop/br",
+                {"x-api-key": self.apiKey},
                 {"language": self.language},
             )
 
@@ -42,7 +43,7 @@ class Athena:
                 date = Utility.ISOtoHuman(
                     self, itemShop["date"].split("T")[0], self.language
                 )
-                log.info(f"Se generara la Tienda de Objetos del {date}")
+                log.info(f"Retrieved Item Shop for {date}")
 
                 shopImage = Athena.GenerateImage(self, date, itemShop)
 
@@ -74,40 +75,31 @@ class Athena:
 
             return True
         except Exception as e:
-            log.critical(f"Error al leer la configuracion, {e}")
+            log.critical(f"Failed to load configuration, {e}")
 
     def GenerateImage(self, date: str, itemShop: dict):
         """
         Generate the Item Shop image using the provided Item Shop.
+
         Return True if image sucessfully saved.
         """
 
-        if itemShop["featured"] != None:
-            featured = itemShop["featured"]["entries"]
-        else:
-            featured = []
+        try:
+            featured = itemShop["featured"]
+            daily = itemShop["daily"]
 
-        if itemShop["daily"] != None:
-            daily = itemShop["daily"]["entries"]
-        else:
-            daily = []
+            # Ensure both Featured and Daily have at least 1 item
+            if (len(featured) <= 0) or (len(daily) <= 0):
+                raise Exception(f"Featured: {len(featured)}, Daily: {len(daily)}")
+        except Exception as e:
+            log.critical(f"Failed to parse Item Shop Featured and Daily items, {e}")
 
-        if itemShop["specialFeatured"] != None:
-            specialFeatured = itemShop["specialFeatured"]["entries"]
-        else:
-            specialFeatured = []
-
-        if itemShop["specialDaily"] != None:
-            specialDaily = itemShop["specialDaily"]["entries"]
-        else:
-            specialDaily = []
+            return False
 
         # Determine the max amount of rows required for the current
         # Item Shop when there are 3 columns for both Featured and Daily.
         # This allows us to determine the image height.
-        
-        rows = max(ceil((len(featured)+len(specialFeatured)) / 3), ceil((len(daily)+len(specialDaily)) / 3))
-        
+        rows = max(ceil(len(featured) / 3), ceil(len(daily) / 3))
         shopImage = Image.new("RGB", (1920, ((545 * rows) + 340)))
 
         try:
@@ -138,7 +130,7 @@ class Athena:
             font=font,
         )
         canvas.text((20, 255), "Destacados", (255, 255, 255), font=font)
-        textWidth, _ = font.getsize("Diario")
+        textWidth, _ = font.getsize("Daily")
         canvas.text(
             (shopImage.width - (textWidth + 20), 255),
             "Diario",
@@ -148,22 +140,7 @@ class Athena:
 
         # Track grid position
         i = 0
-        
-        for item in specialFeatured:
-            card = Athena.GenerateCard(self, item)
 
-            if card is not None:
-                shopImage.paste(
-                    card,
-                    (
-                        (20 + ((i % 3) * (card.width + 5))),
-                        (315 + ((i // 3) * (card.height + 5))),
-                    ),
-                    card,
-                )
-
-                i += 1
-                
         for item in featured:
             card = Athena.GenerateCard(self, item)
 
@@ -181,22 +158,7 @@ class Athena:
 
         # Reset grid position
         i = 0
-        
-        for item in specialDaily:
-            card = Athena.GenerateCard(self, item)
 
-            if card is not None:
-                shopImage.paste(
-                    card,
-                    (
-                        (990 + ((i % 3) * (card.width + 5))),
-                        (315 + ((i // 3) * (card.height + 5))),
-                    ),
-                    card,
-                )
-
-                i += 1
-                
         for item in daily:
             card = Athena.GenerateCard(self, item)
 
@@ -214,7 +176,7 @@ class Athena:
 
         try:
             shopImage.save("itemshop.png")
-            log.info("Imagen de la Tienda de Objetos generada.")
+            log.info("Generated Item Shop image")
 
             return True
         except Exception as e:
@@ -225,16 +187,13 @@ class Athena:
 
         try:
             name = item["items"][0]["name"]
-            rarity = item["items"][0]["rarity"]["value"]
-            category = item["items"][0]["type"]["value"]
+            rarity = item["items"][0]["rarity"]
+            category = item["items"][0]["type"]
             price = item["finalPrice"]
             if isinstance(item["items"][0]["images"]["featured"], dict):
-                icon = item["items"][0]["images"]["featured"]
+                icon = item["items"][0]["images"]["featured"]["url"]
             else:
-                icon = item["items"][0]["images"]["icon"]
-            if item["bundle"] != None:
-                name = item["bundle"]["name"]
-                icon = item["bundle"]["image"]
+                icon = item["items"][0]["images"]["icon"]["url"]
         except Exception as e:
             log.error(f"Failed to parse item {name}, {e}")
 
@@ -246,14 +205,14 @@ class Athena:
             blendColor = (234, 141, 35)
         elif rarity == "legendary":
             blendColor = (211, 120, 65)
-        elif rarity == "slurp":
-            blendColor = (0, 242, 213)
         elif rarity == "dark":
             blendColor = (251, 34, 223)
         elif rarity == "starwars":
             blendColor = (231, 196, 19)
         elif rarity == "marvel":
             blendColor = (197, 51, 52)
+        elif rarity == "slurp":
+            blendColor = (0, 242, 213)
         elif rarity == "dc":
             blendColor = (84, 117, 199)
         elif rarity == "icon":
@@ -300,10 +259,10 @@ class Athena:
             # Start at position 1 in items array
             for extra in item["items"][1:]:
                 try:
-                    extraRarity = extra["rarity"]["value"]
-                    extraIcon = extra["images"]["smallIcon"]
+                    extraRarity = extra["rarity"]
+                    extraIcon = extra["images"]["smallIcon"]["url"]
                 except Exception as e:
-                    log.error(f"Error al analizar el objeto {name}, {e}")
+                    log.error(f"Failed to parse item {name}, {e}")
 
                     return
 
@@ -311,7 +270,7 @@ class Athena:
                     layer = ImageUtil.Open(self, f"box_bottom_{extraRarity}.png")
                 except FileNotFoundError:
                     log.warn(
-                        f"Error al abrir box_bottom_{extraRarity}.png, se usara el Comun por defecto"
+                        f"Failed to open box_bottom_{extraRarity}.png, defaulted to Common"
                     )
                     layer = ImageUtil.Open(self, "box_bottom_common.png")
 
@@ -339,7 +298,7 @@ class Athena:
                     layer = ImageUtil.Open(self, f"box_faceplate_{extraRarity}.png")
                 except FileNotFoundError:
                     log.warn(
-                        f"Error al abrir box_faceplate_{extraRarity}.png, se usara el Comun por defecto"
+                        f"Failed to open box_faceplate_{extraRarity}.png, defaulted to Common"
                     )
                     layer = ImageUtil.Open(self, "box_faceplate_common.png")
 
@@ -357,7 +316,7 @@ class Athena:
         try:
             layer = ImageUtil.Open(self, f"card_faceplate_{rarity}.png")
         except FileNotFoundError:
-            log.warn(f"Error al abrir card_faceplate_{rarity}.png, se usara el Comun por defecto")
+            log.warn(f"Failed to open card_faceplate_{rarity}.png, defaulted to Common")
             layer = ImageUtil.Open(self, "card_faceplate_common.png")
 
         card.paste(layer, layer)
@@ -365,7 +324,7 @@ class Athena:
         try:
             layer = ImageUtil.Open(self, f"card_bottom_{rarity}.png")
         except FileNotFoundError:
-            log.warn(f"Error al abrir card_bottom_{rarity}.png, se usara el Comun por defecto")
+            log.warn(f"Failed to open card_bottom_{rarity}.png, defaulted to Common")
             layer = ImageUtil.Open(self, "card_bottom_common.png")
 
         # Ahora se traducirá las "values" al Español. Tanto en "rarity" como en "category"
@@ -433,7 +392,7 @@ class Athena:
         )
 
         vbucks = ImageUtil.Open(self, "vbucks.png")
-        vbucks = ImageUtil.RatioResize(self, vbucks, 25, 25)
+        vbucks = ImageUtil.RatioResize(self, vbucks, 35, 35)
 
         price = str(f"{price:,}")
         textWidth, _ = font.getsize(price)
@@ -446,7 +405,7 @@ class Athena:
 
         card.paste(
             vbucks,
-            ImageUtil.CenterX(self, (vbucks.width + (textWidth + 5)), card.width, 495),
+            ImageUtil.CenterX(self, (vbucks.width + (textWidth + 5)), card.width, 487),
             vbucks,
         )
 
