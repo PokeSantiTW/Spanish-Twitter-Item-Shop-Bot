@@ -11,7 +11,7 @@ Este bot tiene la función de usar la API de Fortnite-API y crear una imagen de 
 Un ejemplo sería el siguiente:
 
 <p align="center">
-    <img src="https://i.imgur.com/fH0A4Kh.png" width="650px" draggable="true">
+    <img src="https://i.imgur.com/EV3RNBl.jpg" width="650px" draggable="true">
 </p>
 
 ## Requisitos Previos
