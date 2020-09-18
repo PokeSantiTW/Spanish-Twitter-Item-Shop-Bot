@@ -20,7 +20,7 @@ class Athena:
     def main(self):
         print("Generador de Tienda de Objetos")
         print("Creado por: https://github.com/EthanC/Athena\n")
-        print("Modificado y Traducido por: https://github.com/EthanC/Athena\n")
+        print("Modificado y Traducido por: https://github.com/PokeSantiTW/Spanish-Twitter-Item-Shop-Bot\n")
 
         initialized = Athena.LoadConfiguration(self)
 
@@ -233,10 +233,10 @@ class Athena:
         card = Image.new("RGBA", (300, 545))
 
         try:
-            layer = ImageUtil.Open(self, f"card_top_{rarity}.png")
+            layer = ImageUtil.Open(self, f"shopitem_background_{rarity}.png")
         except FileNotFoundError:
-            log.warn(f"Failed to open card_top_{rarity}.png, defaulted to Common")
-            layer = ImageUtil.Open(self, "card_top_common.png")
+            log.warn(f"Failed to open shopitem_background_{rarity}.png, defaulted to Common")
+            layer = ImageUtil.Open(self, "shopitem_background_common.png")
 
         card.paste(layer)
 
@@ -314,18 +314,12 @@ class Athena:
                 i += 1
 
         try:
-            layer = ImageUtil.Open(self, f"card_faceplate_{rarity}.png")
+            layer = ImageUtil.Open(self, f"shopitem_card_{rarity}.png")
         except FileNotFoundError:
-            log.warn(f"Failed to open card_faceplate_{rarity}.png, defaulted to Common")
-            layer = ImageUtil.Open(self, "card_faceplate_common.png")
+            log.warn(f"Failed to open shopitem_card_{rarity}.png, defaulted to Common")
+            layer = ImageUtil.Open(self, "cshopitem_card_common.png")
 
         card.paste(layer, layer)
-
-        try:
-            layer = ImageUtil.Open(self, f"card_bottom_{rarity}.png")
-        except FileNotFoundError:
-            log.warn(f"Failed to open card_bottom_{rarity}.png, defaulted to Common")
-            layer = ImageUtil.Open(self, "card_bottom_common.png")
 
         # Ahora se traducirá las "values" al Español. Tanto en "rarity" como en "category"
         if rarity == "frozen":
@@ -382,22 +376,22 @@ class Athena:
 
         canvas = ImageDraw.Draw(card)
 
-        font = ImageUtil.Font(self, 27)
+        font = ImageUtil.Font(self, 33)
         textWidth, _ = font.getsize(f"{category} {rarity}")
         canvas.text(
             ImageUtil.CenterX(self, textWidth, card.width, 385),
-            f"{category} {rarity}",
+            f"",
             blendColor,
             font=font,
         )
 
-        vbucks = ImageUtil.Open(self, "vbucks.png")
-        vbucks = ImageUtil.RatioResize(self, vbucks, 35, 35)
+        vbucks = ImageUtil.Open(self, "vbucks_card.png")
+        vbucks = ImageUtil.RatioResize(self, vbucks, 49, 49)
 
         price = str(f"{price:,}")
         textWidth, _ = font.getsize(price)
         canvas.text(
-            ImageUtil.CenterX(self, ((textWidth - 5) - vbucks.width), card.width, 495),
+            ImageUtil.CenterX(self, ((textWidth + 15) - vbucks.width), card.width, 450),
             price,
             blendColor,
             font=font,
@@ -405,7 +399,7 @@ class Athena:
 
         card.paste(
             vbucks,
-            ImageUtil.CenterX(self, (vbucks.width + (textWidth + 5)), card.width, 487),
+            ImageUtil.CenterX(self, (vbucks.width + (textWidth - 290)), card.width, 436),
             vbucks,
         )
 
@@ -416,7 +410,7 @@ class Athena:
             # Ensure that the item name does not overflow
             font, textWidth, change = ImageUtil.FitTextX(self, name, 56, 260)
         canvas.text(
-            ImageUtil.CenterX(self, textWidth, card.width, (425 + (change / 2))),
+            ImageUtil.CenterX(self, textWidth, card.width, (380 + (change / 2))),
             name,
             (255, 255, 255),
             font=font,

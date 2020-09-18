@@ -101,7 +101,7 @@ class ImageUtil:
     def Font(
         self,
         size: int,
-        font: str = "BurbankBigCondensed-Black.otf",
+        font: str = "LuckiestGuy-Regular.ttf",
         directory: str = "assets/fonts/",
     ):
         """Return a font object with the specified font file and size."""

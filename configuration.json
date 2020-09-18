@@ -1,13 +1,13 @@
 {
-    "delayStart": 5,
+    "delayStart": 0,
     "fortniteAPI": {
-        "apiKey": "{Introduce aquí tu API Key de https://fortnite-api.com/}"
+        "apiKey": "{Api-Key de https://fortnite-api.com/)"
     },
     "language": "es",
-    "supportACreator": "",
+    "supportACreator": "{Código de Apoya a un Creador aquí}",
     "twitter": {
-        "enabled": true,
-        "apiKey": "{Necesitas una cuenta de Desarrollador en Developer Twitter}",
+        "enabled": false,
+        "apiKey": "{Rellena estos campos con los datos de https://developer.twitter.com/, necesitas cuenta de desarrollador}",
         "apiSecret": "",
         "accessToken": "",
         "accessSecret": ""
