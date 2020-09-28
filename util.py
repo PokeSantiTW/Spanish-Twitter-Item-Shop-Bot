@@ -80,7 +80,7 @@ class ImageUtil:
 
         # HTTP 200 (OK)
         if res.status_code == 200:
-            return Image.open(res.raw)
+            return Image.open(res.raw).convert("RGBA")
         else:
             log.critical(f"Failed to GET {url} (HTTP {res.status_code})")
 
