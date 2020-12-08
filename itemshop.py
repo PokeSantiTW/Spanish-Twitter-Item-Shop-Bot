@@ -26,12 +26,12 @@ class Athena:
 
         if initialized is True:
             if self.delay > 0:
-                log.info(f"Delaying process start for {self.delay}s...")
+                log.info(f"Retrasando ejecución por {self.delay}s...")
                 sleep(self.delay)
 
             itemShop = Utility.GET(
                 self,
-                "https://fortnite-api.com/shop/br",
+                "https://fortnite-api.com/v2/shop/br/combined",
                 {"x-api-key": self.apiKey},
                 {"language": self.language},
             )
@@ -43,7 +43,7 @@ class Athena:
                 date = Utility.ISOtoHuman(
                     self, itemShop["date"].split("T")[0], self.language
                 )
-                log.info(f"Retrieved Item Shop for {date}")
+                log.info(f"Encontrado Tienda de Objetos del {date}")
 
                 shopImage = Athena.GenerateImage(self, date, itemShop)
 
@@ -85,8 +85,8 @@ class Athena:
         """
 
         try:
-            featured = itemShop["featured"]
-            daily = itemShop["daily"]
+            featured = itemShop["featured"]["entries"]
+            daily = itemShop["daily"]["entries"]
 
             # Ensure both Featured and Daily have at least 1 item
             if (len(featured) <= 0) or (len(daily) <= 0):
@@ -100,7 +100,7 @@ class Athena:
         # Item Shop when there are 3 columns for both Featured and Daily.
         # This allows us to determine the image height.
         rows = max(ceil(len(featured) / 3), ceil(len(daily) / 3))
-        shopImage = Image.new("RGB", (1920, ((545 * rows) + 340)))
+        shopImage = Image.new("RGBA", (1920, ((545 * rows) + 340)))
 
         try:
             background = ImageUtil.Open(self, "background.png")
@@ -176,7 +176,7 @@ class Athena:
 
         try:
             shopImage.save("itemshop.png")
-            log.info("Generated Item Shop image")
+            log.info("Imagen generada de la Tienda de Objetos")
 
             return True
         except Exception as e:
@@ -187,13 +187,13 @@ class Athena:
 
         try:
             name = item["items"][0]["name"]
-            rarity = item["items"][0]["rarity"]
-            category = item["items"][0]["type"]
+            rarity = item["items"][0]["rarity"]["value"]
+            category = item["items"][0]["type"]["value"]
             price = item["finalPrice"]
-            if isinstance(item["items"][0]["images"]["featured"], dict):
-                icon = item["items"][0]["images"]["featured"]["url"]
+            if item["items"][0]["images"]["featured"] is not None:
+                icon = item["items"][0]["images"]["featured"]
             else:
-                icon = item["items"][0]["images"]["icon"]["url"]
+                icon = item["items"][0]["images"]["icon"]
         except Exception as e:
             log.error(f"Failed to parse item {name}, {e}")
 
@@ -227,6 +227,8 @@ class Athena:
             blendColor = (96, 170, 58)
         elif rarity == "common":
             blendColor = (190, 190, 190)
+        elif rarity == "gaminglegends":
+            blendColor = (42, 0, 168)
         else:
             blendColor = (255, 255, 255)
 
@@ -240,7 +242,7 @@ class Athena:
 
         card.paste(layer)
 
-        icon = ImageUtil.Download(self, icon)
+        icon = ImageUtil.Download(self, icon).convert("RGBA")
         if (category == "outfit") or (category == "emote"):
             icon = ImageUtil.RatioResize(self, icon, 285, 365)
         elif category == "wrap":
@@ -259,8 +261,8 @@ class Athena:
             # Start at position 1 in items array
             for extra in item["items"][1:]:
                 try:
-                    extraRarity = extra["rarity"]
-                    extraIcon = extra["images"]["smallIcon"]["url"]
+                    extraRarity = extra["rarity"]["value"]
+                    extraIcon = extra["images"]["smallIcon"]
                 except Exception as e:
                     log.error(f"Failed to parse item {name}, {e}")
 
